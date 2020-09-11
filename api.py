@@ -79,7 +79,6 @@ def get_user(public_id):
 
     return jsonify({'users':user_data})
 
-# Provide a method to create access tokens. The create_access_token()
 @app.route('/login', methods=['POST'])
 def login():
     if not request.is_json:
@@ -102,7 +101,6 @@ def login():
         }
         return jsonify({'Username':user.name, 'access_token':data}), 200
     return jsonify({'message':'Something went wrong!'})
-
 
 @app.route('/refresh', methods=['POST'])
 @jwt_refresh_token_required

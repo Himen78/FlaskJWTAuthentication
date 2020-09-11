@@ -6,10 +6,10 @@ from flask_jwt_extended import (
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
+import datetime
 
 app = Flask(__name__)
 
-# Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = 'super-secret'  # Change this!
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ApiDatabase.db'
 app.config['JWT_BLACKLIST_ENABLED'] = True
@@ -25,6 +25,14 @@ class User(db.Model):
     name = db.Column(db.String(50))
     password = db.Column(db.String(80))
     admin = db.Column(db.Boolean)
+
+@jwt.expired_token_loader
+def my_expired_token_callback(expired_token):
+    token_type = expired_token['type']
+    return jsonify({
+        'status': 401,
+        'msg': 'The {} token has expired'.format(token_type)
+    }), 401
 
 @jwt.token_in_blacklist_loader
 def check_if_token_in_blacklist(decrypted_token):
@@ -94,9 +102,11 @@ def login():
     if not user:
         return jsonify({'message' : 'User is not defined!'})
 
+    expires = datetime.timedelta(minutes=2)
+
     if check_password_hash(user.password, auth.password):
         data = {
-        'access_token' : create_access_token(identity=user.name),
+        'access_token' : create_access_token(identity=user.name, expires_delta=expires),
         'refresh_token': create_refresh_token(identity=user.name)
         }
         return jsonify({'Username':user.name, 'access_token':data}), 200

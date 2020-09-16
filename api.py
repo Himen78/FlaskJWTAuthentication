@@ -37,7 +37,8 @@ def my_expired_token_callback(expired_token):
     }
     return jsonify({
         'status': 401,
-        'msg': 'The {} token has expired'.format(token_type)
+        'msg': 'The {} token has expired'.format(token_type),
+        'token': data,
     }), 401
 
 @jwt.token_in_blacklist_loader

@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
-    get_jwt_identity, create_refresh_token, jwt_refresh_token_required, get_raw_jwt
+    get_jwt_identity, create_refresh_token, jwt_refresh_token_required, get_raw_jwt, get_current_user
 )
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -29,6 +29,12 @@ class User(db.Model):
 @jwt.expired_token_loader
 def my_expired_token_callback(expired_token):
     token_type = expired_token['type']
+
+    username = get_jwt_identity()
+    print(username)
+    data = {
+            'refresh_token': create_refresh_token(identity=username)
+    }
     return jsonify({
         'status': 401,
         'msg': 'The {} token has expired'.format(token_type)
@@ -54,7 +60,7 @@ def create_user():
     user_data['public_id'] = new_user.public_id
     user_data['name'] = new_user.name
 
-    return jsonify({'data':user_data, 'message': 'New user created successfully!'})
+    return jsonify({'data':user_data, 'message': 'New user created successfully!'}), 200
 
 @app.route('/get_all_user', methods=['GET'])
 @jwt_required
@@ -107,9 +113,9 @@ def login():
     if check_password_hash(user.password, auth.password):
         data = {
         'access_token' : create_access_token(identity=user.name, expires_delta=expires),
-        'refresh_token': create_refresh_token(identity=user.name)
+        # 'refresh_token': create_refresh_token(identity=user.name)
         }
-        return jsonify({'Username':user.name, 'access_token':data}), 200
+        return jsonify({'Username':user.name, 'token':data}), 200
     return jsonify({'message':'Something went wrong!'})
 
 @app.route('/refresh', methods=['POST'])

@@ -31,7 +31,7 @@ def my_expired_token_callback(expired_token):
     token_type = expired_token['type']
 
     username = get_jwt_identity()
-    print(username)
+
     data = {
             'refresh_token': create_refresh_token(identity=username)
     }
